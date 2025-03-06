@@ -10,13 +10,17 @@
 <body>
     <h1>CNN Flower Analyzer</h1>
     <p class="subtitle">Clasificación de flores usando redes neuronales convolucionales</p>
+    
     <h2>Sube una imagen para clasificarla</h2>
     <input type="file" id="imageInput" accept="image/*">
+    
     <br>
     <img id="preview" src="" alt="Vista previa" style="display:none;">
     <br>
+
     <button onclick="classifyImage()">Clasificar</button>
-    <p id="result"></p>
+    
+    <div id="result"></div>
 
     <script>
         document.getElementById('imageInput').addEventListener('change', function(event) {
@@ -47,11 +51,20 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('result').innerText = 'Resultado: ' + data.class;
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = "<h3>Resultados:</h3>";
+
+                if (data.predictions) {
+                    data.predictions.forEach(prediction => {
+                        resultDiv.innerHTML += `<p>${prediction.class}: ${prediction.confidence}%</p>`;
+                    });
+                } else {
+                    resultDiv.innerHTML = "<p>Error al procesar la imagen.</p>";
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
-                document.getElementById('result').innerText = 'Error al clasificar la imagen.';
+                document.getElementById('result').innerHTML = "<p>Error al clasificar la imagen.</p>";
             });
         }
     </script>
