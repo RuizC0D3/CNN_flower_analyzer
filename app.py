@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import tensorflow as tf
 import numpy as np
 import os
@@ -7,32 +8,30 @@ from PIL import Image
 
 # Inicializar Flask
 app = Flask(__name__)
+CORS(app, resources={r"/predict": {"origins": "*"}})  # Permitir CORS en /predict
 
 # Configuración de rutas y modelo
 MODEL_PATH = "model/flowers-model.keras"
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
-# Crear carpeta de uploads si no existe
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # Cargar modelo
 model = tf.keras.models.load_model(MODEL_PATH)
 
-# Clases de flores (asegúrate de que coincidan con las de tu dataset)
+# Clases de flores
 class_names = ["daisy", "dandelion", "roses", "sunflowers", "tulips"]
 
 # Función para verificar formato de imagen
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Ruta principal (Carga la página web)
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# Ruta para subir imagen y clasificarla
 @app.route("/predict", methods=["POST"])
 def predict():
     if "file" not in request.files:
@@ -48,9 +47,9 @@ def predict():
         file.save(filepath)
         
         # Preprocesar imagen
-        img = Image.open(filepath).resize((180, 180))
-        img = np.array(img) / 255.0  # Normalizar
-        img = np.expand_dims(img, axis=0)  # Agregar batch dimension
+        img = Image.open(filepath).convert("RGB").resize((180, 180))
+        img = np.array(img) / 255.0
+        img = np.expand_dims(img, axis=0)
         
         # Realizar predicción
         predictions = model.predict(img)
